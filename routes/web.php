@@ -45,6 +45,8 @@ Route::middleware(['auth', 'role:hostel_owner'])->prefix('owner/hostel')->name('
     Route::get('/',            [HostelOwnerController::class, 'dashboard'])->name('dashboard');
     Route::get('/listings',    [HostelOwnerController::class, 'dashboard'])->name('listings');
     Route::get('/create',      [HostelOwnerController::class, 'createForm'])->name('create');
+    Route::post('/store',      [HostelOwnerController::class, 'store'])->name('store');
+Route::post('/{id}/update',[HostelOwnerController::class, 'update'])->name('update');
     Route::get('/{id}/edit',   [HostelOwnerController::class, 'editForm'])->name('edit');
     Route::get('/{id}/rooms',  [HostelOwnerController::class, 'roomsPage'])->name('rooms');
     Route::get('/bookings',    [HostelOwnerController::class, 'bookingsPage'])->name('bookings');

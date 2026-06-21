@@ -41,7 +41,7 @@
     <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.85rem;color:var(--danger);">{{ session('error') }}</div>
     @endif
 
-    <form method="POST" action="/api/v1/owner/hostels" enctype="multipart/form-data" id="hostelForm" onsubmit="submitHostel(event)">
+    <form method="POST" action="{{ route('owner.hostel.store') }}" enctype="multipart/form-data" id="hostelForm">
       @csrf
 
       <!-- Basic Info -->
@@ -90,7 +90,7 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Pin Code</label>
-            <input type="text" name="pin_code" class="form-control" placeholder="673001" maxlength="6">
+            <input type="text" name="pincode" class="form-control" placeholder="673001" maxlength="6">
           </div>
           <div class="col-md-6">
             <label class="form-label">Latitude</label>
@@ -164,51 +164,42 @@
 
       <div class="d-flex gap-3">
         <a href="{{ route('owner.hostel.dashboard') }}" class="btn-outline-findr">Cancel</a>
-        <button type="submit" class="btn-primary-findr" id="submitBtn">
-          <i class="bi bi-building-add me-2"></i>Submit Hostel
-        </button>
+       <button type="submit" class="btn-primary-findr">
+    <i class="bi bi-building-add me-2"></i>Submit Hostel
+</button>
       </div>
     </form>
   </div>
 </div>
 @endsection
-
 @push('scripts')
 <script>
-function detectLocation() {
-  navigator.geolocation.getCurrentPosition(p => {
-    document.getElementById('lat').value = p.coords.latitude.toFixed(6);
-    document.getElementById('lng').value = p.coords.longitude.toFixed(6);
-    showToast('Location detected!','success');
-  }, () => showToast('Could not get location','warning'));
-}
-
 function previewImages(input) {
-  const preview = document.getElementById('preview');
-  Array.from(input.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const wrap = document.createElement('div'); wrap.className='img-thumb';
-      wrap.innerHTML = `<img src="${e.target.result}"><button type="button" onclick="this.parentNode.remove()"><i class="bi bi-x"></i></button>`;
-      preview.appendChild(wrap);
-    };
-    reader.readAsDataURL(file);
-  });
+    var preview = document.getElementById('preview');
+    if (!preview) return;
+    Array.from(input.files).forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var div = document.createElement('div');
+            div.style.cssText = 'position:relative;width:85px;height:85px;';
+            div.innerHTML =
+                '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;border:1px solid var(--border-color);">' +
+                '<button type="button" onclick="this.parentNode.remove()" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:0.75rem;">✕</button>';
+            preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
-function submitHostel(e) {
-  e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = 'Submitting…';
-  const fd = new FormData(document.getElementById('hostelForm'));
-  axios.post('/api/v1/owner/hostels', fd, { headers:{'Content-Type':'multipart/form-data'} })
-    .then(() => { showToast('Hostel submitted for review!','success'); setTimeout(() => window.location=('{{ route("owner.hostel.dashboard") }}'), 1500); })
-    .catch(err => {
-      const msg = err.response?.data?.message || 'Submission failed';
-      const errs = err.response?.data?.errors;
-      showToast(errs ? Object.values(errs).flat().join('. ') : msg, 'danger');
-      btn.disabled=false; btn.innerHTML='<i class="bi bi-building-add me-2"></i>Submit Hostel';
+function detectLocation() {
+    navigator.geolocation.getCurrentPosition(function(p) {
+        document.getElementById('lat').value = p.coords.latitude.toFixed(6);
+        document.getElementById('lng').value = p.coords.longitude.toFixed(6);
+        showToast('Location detected!', 'success');
+    }, function() {
+        showToast('Could not detect location', 'warning');
     });
 }
 </script>
 @endpush
+

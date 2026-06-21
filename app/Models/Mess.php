@@ -45,7 +45,13 @@ class Mess extends Model
 
     public function getCoverImageUrlAttribute(): string
     {
-        if ($this->cover_image) return Storage::disk($this->disk ?? config('filesystems.default'))->url($this->cover_image);
+        $coverImg = $this->images->where('is_cover', true)->first()
+                    ?? $this->images->first();
+
+        if ($coverImg) {
+            return asset('storage/' . $coverImg->image_path);
+        }
+
         return asset('images/mess-placeholder.jpg');
     }
 

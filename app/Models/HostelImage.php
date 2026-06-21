@@ -14,6 +14,14 @@ class HostelImage extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk($this->disk ?? config('filesystems.default'))->url($this->image_path);
+        $disk = $this->disk ?? config('filesystems.default', 'local');
+
+        // For local disk, use asset() to generate proper URL with current port
+        if ($disk === 'local' || $disk === 'public') {
+            return asset('storage/' . $this->image_path);
+        }
+
+        // For S3
+        return Storage::disk($disk)->url($this->image_path);
     }
 }

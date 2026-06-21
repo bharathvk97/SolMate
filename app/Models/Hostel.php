@@ -63,9 +63,19 @@ class Hostel extends Model
 
     public function getCoverImageUrlAttribute(): string
     {
+        // First check the hostel_images table for a cover image
+        $coverImg = $this->images->where('is_cover', true)->first()
+                    ?? $this->images->first();
+
+        if ($coverImg) {
+            return asset('storage/' . $coverImg->image_path);
+        }
+
+        // Fall back to the cover_image column (legacy)
         if ($this->cover_image) {
             return Storage::disk(config('filesystems.default'))->url($this->cover_image);
         }
+
         return asset('images/hostel-placeholder.jpg');
     }
 

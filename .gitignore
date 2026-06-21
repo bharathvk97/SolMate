@@ -1,30 +1,72 @@
-/vendor/
-node_modules/
-npm-debug.log
-yarn-error.log
+# Dependencies
+/vendor
+/node_modules
 
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
-
-# Laravel 5 & Lumen specific
-public/storage
-public/hot
-
-# Laravel 5 & Lumen specific with changed public path
-public_html/storage
-public_html/hot
-
-storage/*.key
+# Environment files
 .env
-Homestead.yaml
-Homestead.json
-/.vagrant
+.env.*
+!.env.example
+
+# Application key and secrets
+auth.json
+
+# Laravel cache & logs
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+
+# Keep storage structure
+!/storage/framework/cache/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/.gitignore
+
+# Compiled assets
+/public/build
+/public/hot
+/public/storage
+
+# IDE files
+.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PHPUnit
 .phpunit.result.cache
 
-/public/build
-/storage/pail
-.env.backup
-.env.production
-.phpactor.json
-auth.json
+# Composer
+composer.phar
+
+# NPM/Yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Laravel Pint
+.pint.cache
+
+# Laravel Sail
+docker-compose.override.yml
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Coverage reports
+coverage/
+.clover.xml
+
+# Cache files
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+
+
+
