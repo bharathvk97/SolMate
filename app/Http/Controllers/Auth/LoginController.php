@@ -35,50 +35,41 @@ class LoginController extends Controller
 
     public function register(Request $request)
     {
-        $rules = [
+        $request->validate([
             'name'     => 'required|string|max:100',
-            'email'    => 'required|email|unique:users',
-            'phone'    => 'required|string|max:15|unique:users',
+            'email'    => 'required|email|unique:users,email',
+            'phone'    => 'required|digits:10',
             'password' => 'required|confirmed|min:8',
-            'role'     => 'required|in:user,hostel_owner,mess_owner',
-        ];
-        if (in_array($request->role, ['hostel_owner','mess_owner'])) {
-            $rules['identity_type']   = 'required|in:aadhaar,passport';
-            $rules['identity_number'] = 'required|string';
-            $rules['identity_front']  = 'required|file|mimes:jpg,jpeg,png,pdf|max:5120';
-        }
-        $request->validate($rules);
-
-        $disk = config('filesystems.default');
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => '91'.$request->phone,
-            'password' => Hash::make($request->password),
-            'role'     => $request->role,
-            'status'   => 'pending_verification',
-            'identity_type'   => $request->identity_type,
-            'identity_number' => $request->identity_number,
-            'identity_status' => $request->role !== 'user' ? 'pending' : null,
+            'role'     => 'required|in:user,hostel_owner,mess_owner',            
         ]);
 
-        if ($request->hasFile('identity_front')) {
-            $user->identity_document_front = $request->file('identity_front')->store('identity/front', $disk);
+        // Check phone uniqueness with 91 prefix
+        $phoneExists = \App\Models\User::where('phone', '91' . $request->phone)
+            ->orWhere('phone', $request->phone)
+            ->exists();
+
+        if ($phoneExists) {
+            return back()->withErrors(['phone' => 'This phone number is already registered.'])->withInput();
         }
-        if ($request->hasFile('identity_back')) {
-            $user->identity_document_back = $request->file('identity_back')->store('identity/back', $disk);
-        }
 
-        $otp = str_pad(rand(0,999999),6,'0',STR_PAD_LEFT);
-        $user->email_otp = $otp;
-        $user->email_otp_expires_at = Carbon::now()->addMinutes(15);
-        $user->save();
+        $otp  = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user = \App\Models\User::create([
+            'name'                 => $request->name,
+            'email'                => $request->email,
+            'phone'                => '91' . $request->phone,
+            'password'             => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role'                 => $request->role,
+            'status'               => 'pending_verification',
+            'email_otp'            => $otp,
+            'email_otp_expires_at' => \Carbon\Carbon::now()->addMinutes(15),
+        ]);
 
-        \Mail::raw("Hello {$user->name},\n\nYour OTP: {$otp}\n\nExpires in 15 minutes.\n\n— SolMate", function($m) use($user) {
-            $m->to($user->email)->subject('Verify Your Email — SolMate');
-        });
+        \Illuminate\Support\Facades\Mail::raw(
+            "Hello {$user->name},\n\nYour SolMate OTP: {$otp}\n\nExpires in 15 minutes.",
+            fn($m) => $m->to($user->email)->subject('Verify Your Email — SolMate')
+        );
 
-        session(['pending_user_id'=>$user->id,'otp_email'=>$user->email]);
+        session(['pending_user_id' => $user->id, 'otp_email' => $user->email]);
         return redirect()->route('verify.otp.page');
     }
 
