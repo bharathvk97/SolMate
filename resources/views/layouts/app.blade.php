@@ -639,6 +639,47 @@
 <!-- ═══════════════ TOAST ═══════════════ -->
 <div class="toast-container" id="toastContainer"></div>
 
+{{-- Auto-show session flash messages as toasts --}}
+@if(session('success'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("success")) }}', 'success');
+});
+</script>
+@endif
+
+@if(session('error'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("error")) }}', 'danger');
+});
+</script>
+@endif
+
+@if(session('warning'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("warning")) }}', 'warning');
+});
+</script>
+@endif
+
+@if(session('info'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("info")) }}', 'info');
+});
+</script>
+@endif
+
+@if($errors->any())
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes($errors->first()) }}', 'danger');
+});
+</script>
+@endif
+
 <!-- ═══════════════ FOOTER ═══════════════ -->
 @unless(request()->routeIs('admin.*') || request()->routeIs('owner.*'))
 <footer style="background:var(--bg-surface); border-top:1px solid var(--border-color); margin-top:4rem; padding:3rem 0 2rem;">

@@ -63,3 +63,26 @@
     </div>
 </div>
 @endsection
+@if(session('success'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("success")) }}', 'success');
+});
+</script>
+@endif
+
+@if(session('error'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes(session("error")) }}', 'danger');
+});
+</script>
+@endif
+
+@if($errors->any())
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showToast('{{ addslashes($errors->first()) }}', 'danger');
+});
+</script>
+@endif
