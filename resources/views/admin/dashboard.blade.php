@@ -93,7 +93,7 @@
                             <input type="hidden" name="status" value="active">
                             <button type="submit" style="background:#D1FAE5;color:#065F46;border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;cursor:pointer;">Approve</button>
                         </form>
-                        <a href="{{ route('admin.hostels.show', $hostel->id) }}" style="background:var(--bg-subtle);color:var(--text-secondary);border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;">View</a>
+                        <a href="{{ route('admin.hostels') }}?status=pending" style="background:var(--bg-subtle);color:var(--text-secondary);border:none;border-radius:6px;padding:4px 10px;font-size:0.75rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;">View</a>
                     </div>
                 </div>
                 @empty
