@@ -68,5 +68,25 @@ coverage/
 bootstrap/cache/*.php
 !bootstrap/cache/.gitignore
 
+# Laravel logs
+storage/logs/*
+!storage/logs/.gitignore
+
+# Laravel compiled views
+storage/framework/views/*
+!storage/framework/views/.gitignore
+
+# Laravel cache
+storage/framework/cache/*
+!storage/framework/cache/.gitignore
+
+# Laravel sessions
+storage/framework/sessions/*
+!storage/framework/sessions/.gitignore
+
+# Laravel testing
+storage/framework/testing/*
+!storage/framework/testing/.gitignore
+
 
 
