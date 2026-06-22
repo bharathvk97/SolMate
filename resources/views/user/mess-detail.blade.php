@@ -124,7 +124,8 @@
                             </div>
                         </div>
                     </div>
-                    @foreach($menu->items as $item)
+                  @php $menuItems = is_array($menu->items) ? $menu->items : (json_decode($menu->items, true) ?? []) @endphp
+@foreach(($menu->items ?? []) as $item)
                     <div class="menu-item-row">
                         <div class="d-flex align-items-center gap-2">
                             <span style="width:6px;height:6px;border-radius:50%;background:var(--brand-primary);flex-shrink:0;"></span>
@@ -204,7 +205,8 @@
                             <div>
                                 <h6 style="font-weight:700;margin:0;font-size:0.92rem;">{{ $plan->name }}</h6>
                                 <div class="d-flex flex-wrap gap-1 mt-1">
-                                    @foreach($plan->slots as $s)
+                                   @php $planSlots = is_array($plan->slots) ? $plan->slots : (json_decode($plan->slots, true) ?? []) @endphp
+@foreach($planSlots as $s)
                                     <span style="background:var(--bg-subtle);border-radius:6px;padding:2px 7px;font-size:0.7rem;font-weight:600;color:var(--text-secondary);">{{ ucfirst($s) }}</span>
                                     @endforeach
                                 </div>
