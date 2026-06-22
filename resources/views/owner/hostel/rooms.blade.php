@@ -379,7 +379,7 @@ function editRoom(id) {
     editingId = id;
 
     document.getElementById('formTitle').innerHTML = '<i class="bi bi-pencil me-2" style="color:var(--brand-primary);"></i>Edit Room';
-    document.getElementById('formMethod').value  = 'PUT';
+    document.getElementById('formMethod').value  = 'POST';
     document.getElementById('formRoomId').value  = id;
     document.getElementById('roomForm').action   = '/owner/hostel/{{ $hostel->id }}/rooms/' + id + '/update';
 
