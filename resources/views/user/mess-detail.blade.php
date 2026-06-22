@@ -270,20 +270,48 @@ function setStarRating(r) {
 }
 
 function submitReview(id, type) {
-    const body = document.getElementById('reviewBody').value;
-    if (!selectedRating) { showToast('Please rate first','warning'); return; }
-    if (body.length < 20) { showToast('Min 20 characters','warning'); return; }
-    axios.post('/api/v1/reviews', { reviewable_type:type, reviewable_id:id, rating:selectedRating, body })
-        .then(() => { showToast('Review submitted!','success'); setTimeout(()=>location.reload(),1500); })
-        .catch(e => showToast(e.response?.data?.message||'Error','danger'));
+    var rating = selectedRating;
+    var body   = document.getElementById('reviewBody').value;
+    if (!rating) { showToast('Please select a star rating', 'warning'); return; }
+    if (body.length < 10) { showToast('Review must be at least 10 characters', 'warning'); return; }
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/reviews';
+    form.style.display = 'none';
+
+    var fields = {
+        '_token':          '{{ csrf_token() }}',
+        'reviewable_type': type,
+        'reviewable_id':   id,
+        'rating':          rating,
+        'body':            body,
+    };
+
+    Object.entries(fields).forEach(function([k, v]) {
+        var input = document.createElement('input');
+        input.name = k; input.value = v;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function toggleFav() {
-    axios.post('/api/v1/favourites', { type:'mess', id:{{ $mess->id }} })
-        .then(r => {
-            document.getElementById('favIcon').className = r.data.saved ? 'bi bi-heart-fill' : 'bi bi-heart';
-            showToast(r.data.message);
-        });
+    axios.post('/favourites/toggle', {
+        type: '{{ isset($hostel) ? "hostel" : "mess" }}',
+        id:   {{ isset($hostel) ? $hostel->id : $mess->id }},
+        _token: '{{ csrf_token() }}'
+    })
+    .then(function(r) {
+        var icon = document.getElementById('favIcon');
+        if (icon) icon.className = r.data.saved ? 'bi bi-heart-fill' : 'bi bi-heart';
+        showToast(r.data.message, 'success');
+    })
+    .catch(function() {
+        window.location = '/login';
+    });
 }
 
 function copyLink() { navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied!')); }

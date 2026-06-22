@@ -31,6 +31,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile',    [HomeController::class, 'profile'])->name('profile');
     Route::get('/bookings',   [HomeController::class, 'bookings'])->name('user.bookings');
     Route::get('/favourites', [HomeController::class, 'favourites'])->name('user.favourites');
+    Route::post('/reviews',   [HomeController::class, 'storeReview'])->name('reviews.store');
+    Route::post('/favourites/toggle', [HomeController::class, 'toggleFavourite'])->name('favourites.toggle');
 });
 
 // ── Hostel Owner ────────────────────────────────────────────────
