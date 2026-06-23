@@ -164,11 +164,18 @@
       <!-- Results Header -->
       <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h2 style="font-size:1.4rem;font-weight:800;margin:0;" id="resultsTitle">Nearby Listings</h2>
-        <select class="form-select" id="sortSelect" style="width:auto;font-size:0.85rem;" onchange="doSearch()">
-          <option value="distance">Nearest First</option>
-          <option value="rating">Top Rated</option>
-          <option value="price_asc">Price: Low to High</option>
-        </select>
+        <div class="d-flex gap-2 flex-wrap">
+          <select class="form-select" id="typeSelect" style="width:auto;font-size:0.85rem;" onchange="applyTypeFilter(this.value)" aria-label="Filter by listing type">
+            <option value="both">All Listings</option>
+            <option value="hostel">Hostels Only</option>
+            <option value="mess">Messes Only</option>
+          </select>
+          <select class="form-select" id="sortSelect" style="width:auto;font-size:0.85rem;" onchange="doSearch()" aria-label="Sort results">
+            <option value="distance">Nearest First</option>
+            <option value="rating">Top Rated</option>
+            <option value="price_asc">Price: Low to High</option>
+          </select>
+        </div>
       </div>
 
       <!-- Skeleton -->
@@ -579,12 +586,25 @@ function doSearch() { hideSuggestions(); if (userLat) loadResults(); }
 function loadMore() { /* TODO: pagination */ }
 
 function setType(t, el) {
+    // chip handler — delegates to the shared filter so chips + dropdown stay in sync
+    applyTypeFilter(t);
+}
+
+function applyTypeFilter(t) {
     activeFilters.type = t;
+
+    // keep the quick-filter chips in sync
     document.querySelectorAll('.filter-chip').forEach(function(c) {
-        if (c.getAttribute('onclick') && c.getAttribute('onclick').includes('setType'))
-            c.classList.remove('active');
+        var oc = c.getAttribute('onclick');
+        if (oc && oc.indexOf('setType') !== -1) {
+            c.classList.toggle('active', oc.indexOf("'" + t + "'") !== -1);
+        }
     });
-    el.classList.add('active');
+
+    // keep the dropdown in sync
+    var sel = document.getElementById('typeSelect');
+    if (sel) sel.value = t;
+
     loadResults();
 }
 
@@ -614,6 +634,8 @@ function resetFilters() {
     activeFilters = { type:'both' };
     document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
     document.querySelector('.filter-chip').classList.add('active');
+    var ts = document.getElementById('typeSelect');
+    if (ts) ts.value = 'both';
     document.querySelectorAll('[data-star]').forEach(function(b) { b.style.color='var(--text-muted)'; });
     document.getElementById('minPrice').value = '';
     document.getElementById('maxPrice').value = '';
