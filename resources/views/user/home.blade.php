@@ -488,7 +488,7 @@ function renderResults() {
         html += items[i].type === 'hostel' ? buildHostelCard(items[i]) : buildMessCard(items[i]);
     }
     grid.innerHTML = html;
-    grid.style.display = 'block';
+    grid.style.display = 'flex';
 
     var title = document.getElementById('resultsTitle');
     if (title) title.textContent = items.length + ' listings found';
