@@ -7,6 +7,7 @@ use App\Models\Mess;
 use App\Models\MessBooking;
 use App\Models\MessImage;
 use App\Models\Menu;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -158,5 +159,45 @@ class MessOwnerController extends Controller
         $bookings = MessBooking::whereIn('mess_id', $messIds)
             ->with(['user', 'mess', 'plan'])->latest()->paginate(20);
         return view('owner.mess.bookings', compact('bookings'));
+    }
+
+    public function reviews()
+    {
+        $messIds = Mess::where('owner_id', auth()->id())->pluck('id');
+
+        $reviews = Review::where('reviewable_type', Mess::class)
+            ->whereIn('reviewable_id', $messIds)
+            ->with(['user', 'reviewable'])
+            ->latest()
+            ->paginate(15);
+
+        $base = Review::where('reviewable_type', Mess::class)->whereIn('reviewable_id', $messIds);
+        $stats = [
+            'total'   => (clone $base)->count(),
+            'average' => round((clone $base)->avg('rating') ?? 0, 1),
+            'replied' => (clone $base)->whereNotNull('owner_reply')->count(),
+        ];
+
+        $pendingBookings = 0;
+
+        return view('owner.mess.reviews', compact('reviews', 'stats', 'pendingBookings'));
+    }
+
+    public function replyReview(Request $request, int $id)
+    {
+        $request->validate(['owner_reply' => 'required|string|max:1000']);
+
+        // Only allow replying to reviews that belong to this owner's messes
+        $messIds = Mess::where('owner_id', auth()->id())->pluck('id');
+        $review = Review::where('reviewable_type', Mess::class)
+            ->whereIn('reviewable_id', $messIds)
+            ->findOrFail($id);
+
+        $review->update([
+            'owner_reply'      => $request->owner_reply,
+            'owner_replied_at' => now(),
+        ]);
+
+        return back()->with('success', 'Your reply has been posted.');
     }
 }

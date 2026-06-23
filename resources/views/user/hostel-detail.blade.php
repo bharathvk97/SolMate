@@ -213,10 +213,10 @@
                 @forelse($hostel->reviews as $review)
                 <div class="review-card">
                     <div class="d-flex align-items-start gap-3">
-                        <img src="{{ $review->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($review->user->name).'&background=6366f1&color=fff' }}" class="avatar-md" alt="avatar" style="border-radius:50%;flex-shrink:0;">
+                        <img src="{{ $review->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=Deleted&background=9ca3af&color=fff' }}" class="avatar-md" alt="avatar" style="border-radius:50%;flex-shrink:0;">
                         <div style="flex:1;">
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <strong style="font-size:0.9rem;">{{ $review->user->name }}</strong>
+                                <strong style="font-size:0.9rem;">{{ $review->user?->name ?? 'Deleted user' }}</strong>
                                 @if($review->is_verified)<span style="background:#D1FAE5;color:#065F46;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">✓ Verified Stay</span>@endif
                                 <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);">{{ $review->created_at->diffForHumans() }}</span>
                             </div>

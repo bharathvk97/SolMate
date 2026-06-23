@@ -45,7 +45,8 @@ Route::middleware(['auth', 'role:hostel_owner'])->prefix('owner/hostel')->name('
     Route::post('/{id}/update',                      [HostelOwnerController::class, 'update'])->name('update');
     Route::get('/bookings',                          [HostelOwnerController::class, 'bookingsPage'])->name('bookings');
     Route::put('/bookings/{id}/status',              [HostelOwnerController::class, 'updateBookingStatus'])->name('bookings.status');
-    Route::get('/reviews',                           fn() => view('owner.hostel.reviews'))->name('reviews');
+    Route::get('/reviews',                           [HostelOwnerController::class, 'reviews'])->name('reviews');
+    Route::post('/reviews/{id}/reply',               [HostelOwnerController::class, 'replyReview'])->name('reviews.reply');
 
     // ── Room Management ──────────────────────────────────
     Route::get('/{id}/rooms',                        [HostelOwnerController::class, 'roomsPage'])->name('rooms');
@@ -66,7 +67,8 @@ Route::middleware(['auth', 'role:mess_owner'])->prefix('owner/mess')->name('owne
     Route::get('/menus',                     fn() => view('owner.mess.menus'))->name('menus');
     Route::get('/bookings',                  [MessOwnerController::class, 'bookingsPage'])->name('bookings');
     Route::post('/menus/{id}/toggle',        [MessOwnerController::class, 'toggleMenu'])->name('menus.toggle');
-    Route::get('/reviews',                   fn() => view('owner.mess.reviews'))->name('reviews');
+    Route::get('/reviews',                   [MessOwnerController::class, 'reviews'])->name('reviews');
+    Route::post('/reviews/{id}/reply',       [MessOwnerController::class, 'replyReview'])->name('reviews.reply');
 });
 
 // ── Shared Owner: Subscription ──────────────────────────────────

@@ -175,10 +175,10 @@
                 @forelse($mess->reviews as $review)
                 <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;padding:1.1rem;margin-bottom:0.75rem;">
                     <div class="d-flex align-items-start gap-3">
-                        <img src="{{ $review->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($review->user->name).'&background=6366f1&color=fff' }}" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;" alt="avatar">
+                        <img src="{{ $review->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=Deleted&background=9ca3af&color=fff' }}" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;" alt="avatar">
                         <div style="flex:1;">
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <strong style="font-size:0.88rem;">{{ $review->user->name }}</strong>
+                                <strong style="font-size:0.88rem;">{{ $review->user?->name ?? 'Deleted user' }}</strong>
                                 @if($review->is_verified)<span style="background:#D1FAE5;color:#065F46;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">✓ Verified</span>@endif
                                 <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted);">{{ $review->created_at->diffForHumans() }}</span>
                             </div>

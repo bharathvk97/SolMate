@@ -8,6 +8,7 @@ use App\Models\HostelBooking;
 use App\Models\HostelImage;
 use App\Models\Room;
 use App\Models\RoomImage;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -292,5 +293,45 @@ class HostelOwnerController extends Controller
         $booking = HostelBooking::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))->findOrFail($id);
         $booking->update(['status' => $request->status, 'owner_note' => $request->owner_note]);
         return back()->with('success', 'Booking status updated.');
+    }
+
+    public function reviews()
+    {
+        $hostelIds = Hostel::where('owner_id', auth()->id())->pluck('id');
+
+        $reviews = Review::where('reviewable_type', Hostel::class)
+            ->whereIn('reviewable_id', $hostelIds)
+            ->with(['user', 'reviewable'])
+            ->latest()
+            ->paginate(15);
+
+        $base = Review::where('reviewable_type', Hostel::class)->whereIn('reviewable_id', $hostelIds);
+        $stats = [
+            'total'   => (clone $base)->count(),
+            'average' => round((clone $base)->avg('rating') ?? 0, 1),
+            'replied' => (clone $base)->whereNotNull('owner_reply')->count(),
+        ];
+
+        $pendingBookings = HostelBooking::whereIn('hostel_id', $hostelIds)->where('status', 'pending')->count();
+
+        return view('owner.hostel.reviews', compact('reviews', 'stats', 'pendingBookings'));
+    }
+
+    public function replyReview(Request $request, int $id)
+    {
+        $request->validate(['owner_reply' => 'required|string|max:1000']);
+
+        // Only allow replying to reviews that belong to this owner's hostels
+        $hostelIds = Hostel::where('owner_id', auth()->id())->pluck('id');
+        $review = Review::where('reviewable_type', Hostel::class)
+            ->whereIn('reviewable_id', $hostelIds)
+            ->findOrFail($id);
+
+        $review->update([
+            'owner_reply'      => $request->owner_reply,
+            'owner_replied_at' => now(),
+        ]);
+
+        return back()->with('success', 'Your reply has been posted.');
     }
 }

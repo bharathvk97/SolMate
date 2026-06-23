@@ -36,8 +36,8 @@
       <div style="padding:1.2rem;">
         <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
           <div>
-            <h6 style="font-weight:700;margin:0;">{{ $b->hostel->name }}</h6>
-            <p style="font-size:.8rem;color:var(--text-muted);margin:3px 0 0;">{{ $b->room->name }} · {{ $b->hostel->city }}</p>
+            <h6 style="font-weight:700;margin:0;">{{ $b->hostel?->name ?? 'Hostel no longer available' }}</h6>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:3px 0 0;">{{ $b->room?->name ?? 'Room removed' }} · {{ $b->hostel?->city }}</p>
           </div>
           <span class="badge-status badge-{{ $b->status }}">{{ ucfirst($b->status) }}</span>
         </div>
@@ -56,11 +56,11 @@
           </div>
           <div class="col-6 col-md-3">
             <p style="font-size:.72rem;color:var(--text-muted);margin:0;">Booking Ref</p>
-            <strong style="font-size:.78rem;font-family:monospace;">{{ $b->booking_reference }}</strong>
+            <strong style="font-size:.78rem;font-family:monospace;">{{ $b->booking_ref }}</strong>
           </div>
         </div>
         <div class="d-flex gap-2 mt-3">
-          <a href="/hostels/{{ $b->hostel->slug }}" class="btn-outline-findr" style="padding:.4rem .9rem;font-size:.8rem;">View Hostel</a>
+          <a href="{{ $b->hostel ? '/hostels/'.$b->hostel->slug : '#' }}" class="btn-outline-findr" style="padding:.4rem .9rem;font-size:.8rem;">View Hostel</a>
           @if($b->status === 'pending')
           <form method="POST" action="/api/v1/bookings/hostel/{{ $b->id }}/cancel" style="margin:0;">
             @csrf
@@ -89,8 +89,8 @@
       <div style="padding:1.2rem;">
         <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
           <div>
-            <h6 style="font-weight:700;margin:0;">{{ $b->mess->name }}</h6>
-            <p style="font-size:.8rem;color:var(--text-muted);margin:3px 0 0;">{{ $b->plan->name }} · {{ $b->mess->city }}</p>
+            <h6 style="font-weight:700;margin:0;">{{ $b->mess?->name ?? 'Mess no longer available' }}</h6>
+            <p style="font-size:.8rem;color:var(--text-muted);margin:3px 0 0;">{{ $b->plan?->name ?? 'Plan removed' }} · {{ $b->mess?->city }}</p>
           </div>
           <span class="badge-status badge-{{ $b->payment_status==='paid'?'active':'pending' }}">{{ $b->payment_status==='paid'?'Active':'Pending' }}</span>
         </div>
@@ -105,7 +105,7 @@
           </div>
           <div class="col-6 col-md-3">
             <p style="font-size:.72rem;color:var(--text-muted);margin:0;">Amount</p>
-            <strong style="font-size:.85rem;color:var(--brand-primary);">₹{{ number_format($b->amount_paid) }}</strong>
+            <strong style="font-size:.85rem;color:var(--brand-primary);">₹{{ number_format($b->amount ?? 0) }}</strong>
           </div>
           <div class="col-6 col-md-3">
             <p style="font-size:.72rem;color:var(--text-muted);margin:0;">Days Left</p>
@@ -115,7 +115,7 @@
           </div>
         </div>
         <div class="mt-3">
-          <a href="/messes/{{ $b->mess->slug }}" class="btn-outline-findr" style="padding:.4rem .9rem;font-size:.8rem;">View Mess</a>
+          <a href="{{ $b->mess ? '/messes/'.$b->mess->slug : '#' }}" class="btn-outline-findr" style="padding:.4rem .9rem;font-size:.8rem;">View Mess</a>
         </div>
       </div>
     </div>
