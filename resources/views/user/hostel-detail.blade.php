@@ -425,6 +425,23 @@ function copyLink() { navigator.clipboard.writeText(window.location.href).then((
 
 // Booking
 document.querySelectorAll('#bookRoomId, #checkIn, #checkOut').forEach(el => el.addEventListener('change', calcTotal));
+
+// Open the booking modal from a room card's "Book Now" button
+function bookRoom(roomId, roomName, price) {
+    var sel = document.getElementById('bookRoomId');
+    if (sel) {
+        sel.value = String(roomId); // pre-select the room that was clicked
+        // if that room isn't in the dropdown for some reason, fall back to the first option
+        if (sel.value !== String(roomId) && sel.options.length) sel.selectedIndex = 0;
+    }
+    calcTotal(); // refresh the price summary (safely no-ops until dates are picked)
+
+    var modalEl = document.getElementById('bookingModal');
+    if (modalEl && window.bootstrap) {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+}
+
 function calcTotal() {
     const sel = document.getElementById('bookRoomId');
     const opt = sel.options[sel.selectedIndex];

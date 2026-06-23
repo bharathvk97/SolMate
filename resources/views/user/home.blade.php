@@ -536,7 +536,7 @@ function buildHostelCard(h) {
         + '</div>'
         + '<div class="d-flex gap-2 mt-3">'
         + '<a href="/hostels/' + h.slug + '" class="btn-primary-findr flex-grow-1 text-center" style="padding:0.5rem;font-size:0.84rem;" onclick="event.stopPropagation()">View Details</a>'
-        + '<a href="' + h.whatsapp_share + '" target="_blank" style="background:#25D366;color:#fff;border-radius:10px;padding:0.5rem 0.75rem;display:flex;align-items:center;font-size:0.82rem;font-weight:600;text-decoration:none;" onclick="event.stopPropagation()">💬</a>'
+        + '<a href="' + h.whatsapp_share + '" target="_blank" style="background:#25D366;color:#fff;border-radius:10px;padding:0.5rem 0.75rem;display:flex;align-items:center;font-size:0.82rem;font-weight:600;text-decoration:none;" onclick="event.stopPropagation()"><i class="bi bi-whatsapp"></i></a>'
         + '</div>'
         + '</div></div></div>';
 }
@@ -576,7 +576,7 @@ function buildMessCard(m) {
         + '</div>'
         + '<div class="d-flex gap-2 mt-3">'
         + '<a href="/messes/' + m.slug + '" class="btn-primary-findr flex-grow-1 text-center" style="padding:0.5rem;font-size:0.84rem;" onclick="event.stopPropagation()">View Menu</a>'
-        + '<a href="' + m.whatsapp_share + '" target="_blank" style="background:#25D366;color:#fff;border-radius:10px;padding:0.5rem 0.75rem;display:flex;align-items:center;font-size:0.82rem;font-weight:600;text-decoration:none;" onclick="event.stopPropagation()">💬</a>'
+        + '<a href="' + m.whatsapp_share + '" target="_blank" style="background:#25D366;color:#fff;border-radius:10px;padding:0.5rem 0.75rem;display:flex;align-items:center;font-size:0.82rem;font-weight:600;text-decoration:none;" onclick="event.stopPropagation()"><i class="bi bi-whatsapp"></i></a>'
         + '</div>'
         + '</div></div></div>';
 }

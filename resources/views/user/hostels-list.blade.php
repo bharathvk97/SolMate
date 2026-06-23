@@ -127,7 +127,7 @@
             <a href="https://wa.me/?text={{ urlencode('Check out ' . $hostel->name . '! ' . route('hostels.show', $hostel->slug)) }}"
                target="_blank"
                style="background:#25D366;color:#fff;border-radius:10px;padding:0.5rem 0.75rem;display:flex;align-items:center;font-size:0.82rem;font-weight:600;text-decoration:none;"
-               onclick="event.stopPropagation()">💬</a>
+               onclick="event.stopPropagation()"><i class="bi bi-whatsapp"></i></a>
           </div>
         </div>
       </div>
