@@ -64,8 +64,11 @@ Route::middleware(['auth', 'role:mess_owner'])->prefix('owner/mess')->name('owne
     Route::post('/store',                    [MessOwnerController::class, 'store'])->name('store');
     Route::get('/{id}/edit',                 [MessOwnerController::class, 'editForm'])->name('edit');
     Route::post('/{id}/update',              [MessOwnerController::class, 'update'])->name('update');
-    Route::get('/menus',                     fn() => view('owner.mess.menus'))->name('menus');
+    Route::get('/menus',                     [MessOwnerController::class, 'menus'])->name('menus');
     Route::get('/bookings',                  [MessOwnerController::class, 'bookingsPage'])->name('bookings');
+    Route::post('/menus',                    [MessOwnerController::class, 'storeMenu'])->name('menus.store');
+    Route::post('/menus/{id}/update',        [MessOwnerController::class, 'updateMenu'])->name('menus.update');
+    Route::post('/menus/{id}/delete',        [MessOwnerController::class, 'deleteMenu'])->name('menus.delete');
     Route::post('/menus/{id}/toggle',        [MessOwnerController::class, 'toggleMenu'])->name('menus.toggle');
     Route::get('/reviews',                   [MessOwnerController::class, 'reviews'])->name('reviews');
     Route::post('/reviews/{id}/reply',       [MessOwnerController::class, 'replyReview'])->name('reviews.reply');

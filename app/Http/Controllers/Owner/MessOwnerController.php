@@ -153,6 +153,96 @@ class MessOwnerController extends Controller
         return back()->with('success', "Menu slot marked as {$menu->status}.");
     }
 
+    public function menus()
+    {
+        $messes = Mess::where('owner_id', auth()->id())
+            ->with('menus')
+            ->orderBy('name')
+            ->get();
+
+        // Order each mess's menus by meal slot (DB-agnostic, done in PHP)
+        $slotOrder = ['morning' => 0, 'afternoon' => 1, 'evening' => 2, 'night' => 3];
+        foreach ($messes as $mess) {
+            $mess->setRelation('menus', $mess->menus->sortBy(fn($m) => $slotOrder[$m->slot] ?? 9)->values());
+        }
+
+        $pendingBookings = 0; // keeps the sidebar badge consistent with other owner pages
+
+        return view('owner.mess.menus', compact('messes', 'pendingBookings'));
+    }
+
+    public function storeMenu(Request $request)
+    {
+        $data = $request->validate([
+            'mess_id'      => 'required|integer',
+            'slot'         => 'required|in:morning,afternoon,evening,night',
+            'title'        => 'nullable|string|max:200',
+            'price'        => 'required|numeric|min:0',
+            'notes'        => 'nullable|string|max:500',
+            'items'        => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:150',
+            'items.*.qty'  => 'nullable|string|max:50',
+        ]);
+
+        // Make sure the mess belongs to the logged-in owner
+        Mess::where('owner_id', auth()->id())->findOrFail($data['mess_id']);
+
+        Menu::create([
+            'mess_id'      => $data['mess_id'],
+            'slot'         => $data['slot'],
+            'title'        => $data['title'] ?? null,
+            'items'        => json_encode($this->cleanItems($data['items'])),
+            'price'        => $data['price'],
+            'notes'        => $data['notes'] ?? null,
+            'is_available' => $request->boolean('is_available'),
+            'status'       => 'open',
+        ]);
+
+        return back()->with('success', 'Menu added.');
+    }
+
+    public function updateMenu(Request $request, int $id)
+    {
+        $menu = Menu::whereHas('mess', fn($q) => $q->where('owner_id', auth()->id()))->findOrFail($id);
+
+        $data = $request->validate([
+            'slot'         => 'required|in:morning,afternoon,evening,night',
+            'title'        => 'nullable|string|max:200',
+            'price'        => 'required|numeric|min:0',
+            'notes'        => 'nullable|string|max:500',
+            'items'        => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:150',
+            'items.*.qty'  => 'nullable|string|max:50',
+        ]);
+
+        $menu->update([
+            'slot'         => $data['slot'],
+            'title'        => $data['title'] ?? null,
+            'items'        => json_encode($this->cleanItems($data['items'])),
+            'price'        => $data['price'],
+            'notes'        => $data['notes'] ?? null,
+            'is_available' => $request->boolean('is_available'),
+        ]);
+
+        return back()->with('success', 'Menu updated.');
+    }
+
+    public function deleteMenu(int $id)
+    {
+        $menu = Menu::whereHas('mess', fn($q) => $q->where('owner_id', auth()->id()))->findOrFail($id);
+        $menu->delete();
+        return back()->with('success', 'Menu deleted.');
+    }
+
+    // Drop blank rows and keep only name + qty for each item
+    private function cleanItems(array $items): array
+    {
+        return array_values(array_map(
+            fn($i) => ['name' => trim($i['name']), 'qty' => trim($i['qty'] ?? '')],
+            array_filter($items, fn($i) => isset($i['name']) && trim($i['name']) !== '')
+        ));
+    }
+
     public function bookingsPage(Request $request)
     {
         $messIds  = Mess::where('owner_id', auth()->id())->pluck('id');
