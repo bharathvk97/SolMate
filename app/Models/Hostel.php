@@ -81,6 +81,11 @@ class Hostel extends Model
 
     public function getDistanceAttribute() { return $this->attributes['distance'] ?? null; }
 
+    public function getWhatsappShareAttribute(): string
+    {
+        return 'https://wa.me/?text=' . urlencode("Check out {$this->name}! " . url('/hostels/' . $this->slug));
+    }
+
     public function updateRating(): void
     {
         $avg = $this->reviews()->where('is_hidden', false)->avg('rating') ?? 0;

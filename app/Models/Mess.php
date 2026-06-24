@@ -55,6 +55,11 @@ class Mess extends Model
         return asset('images/mess-placeholder.jpg');
     }
 
+    public function getWhatsappShareAttribute(): string
+    {
+        return 'https://wa.me/?text=' . urlencode("Check out {$this->name}! " . url('/messes/' . $this->slug));
+    }
+
     public function isSlotOpen(string $slot): bool
     {
         $now = now()->format('H:i:s');
