@@ -62,7 +62,7 @@
             <div class="col-12 col-md-4">
                 <div class="role-card" onclick="selectRole('user',this)">
                     <div class="role-icon">👤</div>
-                    <h6>Student / User</h6>
+                    <h6>User</h6>
                     <p>Find hostels & mess near you</p>
                 </div>
             </div>
@@ -198,6 +198,21 @@
                         <p style="font-size:0.72rem;color:var(--text-muted);margin:2px 0 0;">JPG, PNG or PDF · Max 5MB</p>
                     </div>
                     <input type="file" id="backDoc" name="identity_back" accept="image/*,.pdf" style="display:none;" onchange="fileChosen('backZone','backLabel',this)">
+                </div>
+            </div>
+
+            <!-- Owner: Terms (owners must also accept the T&C / Privacy Policy) -->
+            <div style="background:var(--bg-subtle);border-radius:12px;padding:1rem;margin-top:1.25rem;">
+                <label style="display:flex;gap:10px;cursor:pointer;font-size:0.88rem;color:var(--text-secondary);">
+                    <input type="checkbox" id="ownerTermsCheck" name="terms" value="1"
+                        style="accent-color:var(--brand-primary);width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+                    I agree to the
+                    <a href="#" style="color:var(--brand-primary);">Terms of Service</a>
+                    and
+                    <a href="#" style="color:var(--brand-primary);">Privacy Policy</a>
+                </label>
+                <div id="ownerTermsError" style="color:var(--danger);font-size:0.8rem;margin-top:6px;display:none;">
+                    <i class="bi bi-exclamation-circle me-1"></i>Please accept the terms to continue.
                 </div>
             </div>
         </div>
@@ -349,16 +364,15 @@ function validateStep2() {
 function submitRegister() {
     var isOwner = (currentRole === 'hostel_owner' || currentRole === 'mess_owner');
 
-    // Only check terms for regular users
-    if (!isOwner) {
-        var terms = document.getElementById('termsCheck');
-        if (!terms || !terms.checked) {
-            document.getElementById('termsError').style.display = 'block';
-            showToast('Please accept the Terms of Service to continue.', 'warning');
-            return;
-        }
-        document.getElementById('termsError').style.display = 'none';
+    // Both users and owners must accept the Terms of Service & Privacy Policy
+    var termsBox   = document.getElementById(isOwner ? 'ownerTermsCheck' : 'termsCheck');
+    var termsErrEl = document.getElementById(isOwner ? 'ownerTermsError' : 'termsError');
+    if (!termsBox || !termsBox.checked) {
+        if (termsErrEl) termsErrEl.style.display = 'block';
+        showToast('Please accept the Terms of Service to continue.', 'warning');
+        return;
     }
+    if (termsErrEl) termsErrEl.style.display = 'none';
 
     // Disable button to prevent double submit
     var btn = document.getElementById('submitBtn');

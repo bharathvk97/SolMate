@@ -40,7 +40,10 @@ class LoginController extends Controller
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'required|digits:10',
             'password' => 'required|confirmed|min:8',
-            'role'     => 'required|in:user,hostel_owner,mess_owner',            
+            'role'     => 'required|in:user,hostel_owner,mess_owner',
+            'terms'    => 'accepted',
+        ], [
+            'terms.accepted' => 'Please accept the Terms of Service and Privacy Policy.',
         ]);
 
         // Check phone uniqueness with 91 prefix
