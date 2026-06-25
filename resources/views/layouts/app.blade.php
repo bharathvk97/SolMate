@@ -325,6 +325,12 @@
         outline: none;
     }
     .form-control::placeholder { color: var(--text-muted); }
+
+    /* Modal theming — adapt Bootstrap modals to the active light/dark theme */
+    .modal-content { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 16px; }
+    .modal-header, .modal-footer { border-color: var(--border-color); }
+    .modal-title { color: var(--text-primary); }
+    [data-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(180%); }
     .form-label {
         font-size: 0.83rem;
         font-weight: 600;
