@@ -354,6 +354,7 @@
     }
     .btn-primary-findr:hover {
         background: #4749d1;
+        color: #fff;
         transform: translateY(-1px);
         box-shadow: 0 4px 16px rgba(92,95,239,0.35);
     }
@@ -372,6 +373,9 @@
         background: var(--brand-primary);
         color: #fff;
     }
+    /* Button-styled links must never show the anchor underline (incl. on hover/focus) */
+    .btn-primary-findr, .btn-primary-findr:hover, .btn-primary-findr:focus,
+    .btn-outline-findr, .btn-outline-findr:hover, .btn-outline-findr:focus { text-decoration: none; }
 
     /* ═══════════════════════════════════════════
        BADGES
