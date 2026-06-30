@@ -8,8 +8,11 @@ use App\Models\HostelBooking;
 use App\Models\HostelImage;
 use App\Models\Room;
 use App\Models\RoomImage;
+use App\Models\HostelMember;
+use App\Models\RoomAsset;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class HostelOwnerController extends Controller
@@ -281,11 +284,38 @@ class HostelOwnerController extends Controller
     public function bookingsPage(Request $request)
     {
         $hostelIds = Hostel::where('owner_id', auth()->id())->pluck('id');
-        $bookings  = HostelBooking::whereIn('hostel_id', $hostelIds)
-            ->with(['user', 'hostel', 'room'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->latest()->paginate(20);
-        return view('owner.hostel.bookings', compact('bookings'));
+
+        // Residents = people with an approved stay (exclude pending requests, rejected, cancelled)
+        $base = HostelBooking::whereIn('hostel_id', $hostelIds)
+            ->whereIn('status', ['confirmed', 'checked_in', 'checked_out']);
+
+        $stats = [
+            'total'        => (clone $base)->count(),
+            'pending'      => (clone $base)->where('rent_status', 'pending')->count(),
+            'advance_paid' => (clone $base)->where('rent_status', 'advance_paid')->count(),
+            'fully_paid'   => (clone $base)->where('rent_status', 'fully_paid')->count(),
+        ];
+
+        $query = (clone $base)->with(['user', 'hostel', 'room']);
+
+        // Filter by rent status category
+        if (in_array($request->rent, ['pending', 'advance_paid', 'fully_paid'], true)) {
+            $query->where('rent_status', $request->rent);
+        }
+
+        // Date range filter — residents whose stay overlaps the chosen window
+        if ($request->filled('start_date')) {
+            $query->whereDate('check_out', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('check_in', '<=', $request->end_date);
+        }
+
+        $bookings = $query->orderByDesc('check_in')->paginate(15)->withQueryString();
+
+        $pendingBookings = HostelBooking::whereIn('hostel_id', $hostelIds)->where('status', 'pending')->count();
+
+        return view('owner.hostel.bookings', compact('bookings', 'stats', 'pendingBookings'));
     }
 
     public function updateBookingStatus(Request $request, int $id)
@@ -293,6 +323,16 @@ class HostelOwnerController extends Controller
         $booking = HostelBooking::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))->findOrFail($id);
         $booking->update(['status' => $request->status, 'owner_note' => $request->owner_note]);
         return back()->with('success', 'Booking status updated.');
+    }
+
+    public function updateRentStatus(Request $request, int $id)
+    {
+        $request->validate(['rent_status' => 'required|in:pending,advance_paid,fully_paid']);
+
+        $booking = HostelBooking::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))->findOrFail($id);
+        $booking->update(['rent_status' => $request->rent_status]);
+
+        return back()->with('success', 'Rent status updated.');
     }
 
     public function reviews()
@@ -333,5 +373,278 @@ class HostelOwnerController extends Controller
         ]);
 
         return back()->with('success', 'Your reply has been posted.');
+    }
+
+    // ── MEMBERS (Subscription) ─────────────────────────────
+
+    private function ownerHostelIds()
+    {
+        return Hostel::where('owner_id', auth()->id())->pluck('id');
+    }
+
+    private function sidebarPendingCount(): int
+    {
+        return HostelBooking::whereIn('hostel_id', $this->ownerHostelIds())
+            ->where('status', 'pending')->count();
+    }
+
+    public function membersPage(Request $request)
+    {
+        $hostelIds = $this->ownerHostelIds();
+        $base      = HostelMember::whereIn('hostel_id', $hostelIds);
+
+        $stats = [
+            'total'        => (clone $base)->count(),
+            'pending'      => (clone $base)->where('rent_status', 'pending')->count(),
+            'advance_paid' => (clone $base)->where('rent_status', 'advance_paid')->count(),
+            'fully_paid'   => (clone $base)->where('rent_status', 'fully_paid')->count(),
+        ];
+
+        $query = (clone $base)->with(['hostel', 'room']);
+
+        // Search across name, phone, email, place, room number, ID and id-proof number.
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($w) use ($search) {
+                $w->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('place', 'like', "%{$search}%")
+                  ->orWhere('room_number', 'like', "%{$search}%")
+                  ->orWhere('id_proof_number', 'like', "%{$search}%");
+                if (ctype_digit($search)) {
+                    $w->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+        // Rent status filter (paid / unpaid / advance).
+        if (in_array($request->rent, ['pending', 'advance_paid', 'fully_paid'], true)) {
+            $query->where('rent_status', $request->rent);
+        }
+
+        // Optional hostel filter (only the owner's hostels).
+        if ($request->filled('hostel_id') && $hostelIds->contains((int) $request->hostel_id)) {
+            $query->where('hostel_id', (int) $request->hostel_id);
+        }
+
+        $members = $query->orderByDesc('id')->paginate(12)->withQueryString();
+
+        $hostels = Hostel::where('owner_id', auth()->id())
+            ->with(['rooms' => fn($q) => $q->orderBy('name')])
+            ->orderBy('name')->get();
+
+        $pendingBookings = $this->sidebarPendingCount();
+
+        return view('owner.hostel.members', compact('members', 'stats', 'hostels', 'pendingBookings'));
+    }
+
+    public function storeMember(Request $request)
+    {
+        $data   = $this->validateMember($request);
+        $hostel = Hostel::where('owner_id', auth()->id())->findOrFail($data['hostel_id']);
+
+        $payload = $this->memberPayload($data, $hostel);
+
+        if ($request->hasFile('photo')) {
+            $disk = config('filesystems.default');
+            $payload['photo_path'] = $request->file('photo')->store('members', $disk);
+            $payload['photo_disk'] = $disk;
+        }
+
+        HostelMember::create($payload);
+
+        return redirect()->route('owner.hostel.members')
+            ->with('success', "Member '{$data['name']}' added.");
+    }
+
+    public function updateMember(Request $request, int $id)
+    {
+        $member = HostelMember::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+
+        $data   = $this->validateMember($request);
+        $hostel = Hostel::where('owner_id', auth()->id())->findOrFail($data['hostel_id']);
+
+        $payload = $this->memberPayload($data, $hostel);
+
+        if ($request->hasFile('photo')) {
+            $disk = config('filesystems.default');
+            if ($member->photo_path) {
+                Storage::disk($member->photo_disk ?: $disk)->delete($member->photo_path);
+            }
+            $payload['photo_path'] = $request->file('photo')->store('members', $disk);
+            $payload['photo_disk'] = $disk;
+        }
+
+        $member->update($payload);
+
+        return redirect()->route('owner.hostel.members')
+            ->with('success', "Member '{$member->name}' updated.");
+    }
+
+    public function deleteMember(int $id)
+    {
+        $member = HostelMember::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+
+        if ($member->photo_path) {
+            Storage::disk($member->photo_disk ?: config('filesystems.default'))->delete($member->photo_path);
+        }
+        $member->delete();
+
+        return back()->with('success', 'Member removed.');
+    }
+
+    private function validateMember(Request $request): array
+    {
+        return $request->validate([
+            'hostel_id'       => 'required|integer',
+            'room_id'         => 'nullable|integer',
+            'room_number'     => 'nullable|string|max:50',
+            'name'            => 'required|string|max:150',
+            'age'             => 'nullable|integer|min:1|max:120',
+            'email'           => 'nullable|email|max:150',
+            'phone'           => 'nullable|string|max:20',
+            'id_proof_type'   => 'nullable|in:aadhaar,pan,passport',
+            'id_proof_number' => 'nullable|string|max:50',
+            'place'           => 'nullable|string|max:150',
+            'date_of_join'    => 'nullable|date',
+            'date_of_left'    => 'nullable|date|after_or_equal:date_of_join',
+            'monthly_rent'    => 'nullable|numeric|min:0',
+            'rent_status'     => 'required|in:pending,advance_paid,fully_paid',
+            'notes'           => 'nullable|string|max:1000',
+            'photo'           => 'nullable|image|max:4096',
+        ]);
+    }
+
+    /** Build the writable column set, making sure a chosen room actually belongs to the hostel. */
+    private function memberPayload(array $data, Hostel $hostel): array
+    {
+        $roomId = null;
+        if (!empty($data['room_id'])) {
+            $roomId = Room::where('hostel_id', $hostel->id)->whereKey($data['room_id'])->value('id');
+        }
+
+        return [
+            'hostel_id'       => $hostel->id,
+            'room_id'         => $roomId,
+            'room_number'     => $data['room_number'] ?? null,
+            'name'            => $data['name'],
+            'age'             => $data['age'] ?? null,
+            'email'           => $data['email'] ?? null,
+            'phone'           => $data['phone'] ?? null,
+            'id_proof_type'   => $data['id_proof_type'] ?? null,
+            'id_proof_number' => $data['id_proof_number'] ?? null,
+            'place'           => $data['place'] ?? null,
+            'date_of_join'    => $data['date_of_join'] ?? null,
+            'date_of_left'    => $data['date_of_left'] ?? null,
+            'monthly_rent'    => $data['monthly_rent'] ?? null,
+            'rent_status'     => $data['rent_status'],
+            'notes'           => $data['notes'] ?? null,
+        ];
+    }
+
+    // ── ASSETS (room item counts) ──────────────────────────
+
+    public function assetsPage(Request $request)
+    {
+        $hostelIds = $this->ownerHostelIds();
+        $base      = RoomAsset::whereIn('hostel_id', $hostelIds);
+
+        $stats = [
+            'items' => (clone $base)->count(),
+            'units' => (int) (clone $base)->sum('quantity'),
+        ];
+
+        $query = (clone $base)->with(['hostel', 'room']);
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($w) use ($search) {
+                $w->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('room_number', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('hostel_id') && $hostelIds->contains((int) $request->hostel_id)) {
+            $query->where('hostel_id', (int) $request->hostel_id);
+        }
+        if ($request->filled('room_id')) {
+            $query->where('room_id', (int) $request->room_id);
+        }
+
+        $assets = $query->orderBy('hostel_id')->orderBy('room_number')->orderBy('item_name')
+            ->paginate(15)->withQueryString();
+
+        $hostels = Hostel::where('owner_id', auth()->id())
+            ->with(['rooms' => fn($q) => $q->orderBy('name')])
+            ->orderBy('name')->get();
+
+        $pendingBookings = $this->sidebarPendingCount();
+
+        return view('owner.hostel.assets', compact('assets', 'stats', 'hostels', 'pendingBookings'));
+    }
+
+    public function storeAsset(Request $request)
+    {
+        $data   = $this->validateAsset($request);
+        $hostel = Hostel::where('owner_id', auth()->id())->findOrFail($data['hostel_id']);
+
+        RoomAsset::create($this->assetPayload($data, $hostel));
+
+        return redirect()->route('owner.hostel.assets')
+            ->with('success', "Asset '{$data['item_name']}' added.");
+    }
+
+    public function updateAsset(Request $request, int $id)
+    {
+        $asset = RoomAsset::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+
+        $data   = $this->validateAsset($request);
+        $hostel = Hostel::where('owner_id', auth()->id())->findOrFail($data['hostel_id']);
+
+        $asset->update($this->assetPayload($data, $hostel));
+
+        return redirect()->route('owner.hostel.assets')->with('success', 'Asset updated.');
+    }
+
+    public function deleteAsset(int $id)
+    {
+        $asset = RoomAsset::whereHas('hostel', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+        $asset->delete();
+
+        return back()->with('success', 'Asset removed.');
+    }
+
+    private function validateAsset(Request $request): array
+    {
+        return $request->validate([
+            'hostel_id'   => 'required|integer',
+            'room_id'     => 'nullable|integer',
+            'room_number' => 'nullable|string|max:50',
+            'item_name'   => 'required|string|max:100',
+            'quantity'    => 'required|integer|min:0|max:100000',
+            'notes'       => 'nullable|string|max:255',
+        ]);
+    }
+
+    private function assetPayload(array $data, Hostel $hostel): array
+    {
+        $roomId = null;
+        if (!empty($data['room_id'])) {
+            $roomId = Room::where('hostel_id', $hostel->id)->whereKey($data['room_id'])->value('id');
+        }
+
+        return [
+            'hostel_id'   => $hostel->id,
+            'room_id'     => $roomId,
+            'room_number' => $data['room_number'] ?? null,
+            'item_name'   => $data['item_name'],
+            'quantity'    => $data['quantity'],
+            'notes'       => $data['notes'] ?? null,
+        ];
     }
 }

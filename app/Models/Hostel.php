@@ -57,6 +57,8 @@ class Hostel extends Model
     public function reviews()     { return $this->morphMany(Review::class, 'reviewable'); }
     public function favourites()  { return $this->morphMany(Favourite::class, 'favourable'); }
     public function bookings()    { return $this->hasMany(HostelBooking::class); }
+    public function members()     { return $this->hasMany(HostelMember::class); }
+    public function roomAssets()  { return $this->hasMany(RoomAsset::class); }
 
     public function scopeActive($q)   { return $q->where('status', 'active'); }
     public function scopeFeatured($q) { return $q->where('is_featured', true); }

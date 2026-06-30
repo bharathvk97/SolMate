@@ -14,7 +14,7 @@ class HostelBooking extends Model
         'booking_ref','user_id','hostel_id','room_id','check_in','check_out',
         'occupants','monthly_rate','security_deposit','total_amount','status',
         'user_note','owner_note','razorpay_order_id','razorpay_payment_id',
-        'razorpay_signature','payment_status','confirmed_at','cancelled_at','cancellation_reason',
+        'razorpay_signature','payment_status','rent_status','confirmed_at','cancelled_at','cancellation_reason',
     ];
     protected $casts = ['check_in'=>'date','check_out'=>'date','confirmed_at'=>'datetime','cancelled_at'=>'datetime'];
 

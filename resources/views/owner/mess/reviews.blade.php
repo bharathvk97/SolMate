@@ -21,25 +21,7 @@
 @section('content')
 <div class="owner-wrapper">
     <!-- Sidebar -->
-    <aside class="owner-sidebar">
-        <div class="pt-3">
-            <div class="sidebar-section-label">My Mess</div>
-            <a href="{{ route('owner.mess.dashboard') }}" class="sidebar-item {{ request()->routeIs('owner.mess.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Overview</a>
-            <a href="{{ route('owner.mess.listings') }}" class="sidebar-item {{ request()->routeIs('owner.mess.listings*') ? 'active' : '' }}"><i class="bi bi-egg-fried"></i> My Messes</a>
-            <a href="{{ route('owner.mess.menus') }}" class="sidebar-item {{ request()->routeIs('owner.mess.menus*') ? 'active' : '' }}"><i class="bi bi-menu-button-wide"></i> Food Menus</a>
-            <a href="{{ route('owner.mess.bookings') }}" class="sidebar-item {{ request()->routeIs('owner.mess.bookings*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-check"></i> Subscribers
-                @if($pendingBookings ?? 0)<span class="sidebar-badge">{{ $pendingBookings }}</span>@endif
-            </a>
-            <a href="{{ route('owner.mess.reviews') }}" class="sidebar-item {{ request()->routeIs('owner.mess.reviews*') ? 'active' : '' }}"><i class="bi bi-star"></i> Reviews</a>
-            <div class="sidebar-section-label">Account</div>
-            <a href="{{ route('owner.subscription') }}" class="sidebar-item {{ request()->routeIs('owner.subscription*') ? 'active' : '' }}">
-                <i class="bi bi-credit-card"></i> Subscription
-                @if(!auth()->user()->hasActiveSubscription())<span class="sidebar-badge" style="background:var(--danger);">!</span>@endif
-            </a>
-            <a href="{{ route('profile') }}" class="sidebar-item"><i class="bi bi-person"></i> Profile</a>
-        </div>
-    </aside>
+    @include('owner.partials.mess-sidebar')
 
     <div class="owner-content">
         <div class="page-header"><h1>Reviews</h1><p>See what diners are saying about your messes and reply to their feedback.</p></div>

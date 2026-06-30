@@ -13,8 +13,8 @@
         <tr style="{{ $r->is_hidden ? 'opacity:.55;' : '' }}">
           <td>
             <div style="display:flex;align-items:center;gap:8px;">
-              <img src="{{ $r->user->avatar_url }}" style="width:32px;height:32px;border-radius:50%;" alt="">
-              <p style="font-weight:600;font-size:.83rem;margin:0;">{{ $r->user->name }}</p>
+              <img src="{{ $r->user?->avatar_url ?? 'https://ui-avatars.com/api/?name=Deleted&background=9ca3af&color=fff' }}" style="width:32px;height:32px;border-radius:50%;" alt="">
+              <p style="font-weight:600;font-size:.83rem;margin:0;">{{ $r->user?->name ?? 'Deleted user' }}</p>
             </div>
           </td>
           <td style="font-size:.82rem;">

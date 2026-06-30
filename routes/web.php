@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:hostel_owner'])->prefix('owner/hostel')->name('
     Route::post('/{id}/update',                      [HostelOwnerController::class, 'update'])->name('update');
     Route::get('/bookings',                          [HostelOwnerController::class, 'bookingsPage'])->name('bookings');
     Route::put('/bookings/{id}/status',              [HostelOwnerController::class, 'updateBookingStatus'])->name('bookings.status');
+    Route::post('/bookings/{id}/rent-status',        [HostelOwnerController::class, 'updateRentStatus'])->name('bookings.rent');
     Route::get('/reviews',                           [HostelOwnerController::class, 'reviews'])->name('reviews');
     Route::post('/reviews/{id}/reply',               [HostelOwnerController::class, 'replyReview'])->name('reviews.reply');
 
@@ -54,6 +55,18 @@ Route::middleware(['auth', 'role:hostel_owner'])->prefix('owner/hostel')->name('
     Route::post('/{hostelId}/rooms/{roomId}/update', [HostelOwnerController::class, 'updateRoom'])->name('rooms.update');
     Route::post('/{hostelId}/rooms/{roomId}/toggle', [HostelOwnerController::class, 'toggleRoom'])->name('rooms.toggle');
     Route::delete('/{hostelId}/rooms/{roomId}',      [HostelOwnerController::class, 'deleteRoom'])->name('rooms.delete');
+
+    // ── Members (Subscription) ───────────────────────────
+    Route::get('/members',               [HostelOwnerController::class, 'membersPage'])->name('members');
+    Route::post('/members/store',        [HostelOwnerController::class, 'storeMember'])->name('members.store');
+    Route::post('/members/{id}/update',  [HostelOwnerController::class, 'updateMember'])->name('members.update');
+    Route::delete('/members/{id}',       [HostelOwnerController::class, 'deleteMember'])->name('members.delete');
+
+    // ── Assets (room item counts) ────────────────────────
+    Route::get('/assets',                [HostelOwnerController::class, 'assetsPage'])->name('assets');
+    Route::post('/assets/store',         [HostelOwnerController::class, 'storeAsset'])->name('assets.store');
+    Route::post('/assets/{id}/update',   [HostelOwnerController::class, 'updateAsset'])->name('assets.update');
+    Route::delete('/assets/{id}',        [HostelOwnerController::class, 'deleteAsset'])->name('assets.delete');
 });
 
 // ── Mess Owner ──────────────────────────────────────────────────
@@ -72,6 +85,12 @@ Route::middleware(['auth', 'role:mess_owner'])->prefix('owner/mess')->name('owne
     Route::post('/menus/{id}/toggle',        [MessOwnerController::class, 'toggleMenu'])->name('menus.toggle');
     Route::get('/reviews',                   [MessOwnerController::class, 'reviews'])->name('reviews');
     Route::post('/reviews/{id}/reply',       [MessOwnerController::class, 'replyReview'])->name('reviews.reply');
+
+    // ── Members (Subscription) ───────────────────────────
+    Route::get('/members',               [MessOwnerController::class, 'membersPage'])->name('members');
+    Route::post('/members/store',        [MessOwnerController::class, 'storeMember'])->name('members.store');
+    Route::post('/members/{id}/update',  [MessOwnerController::class, 'updateMember'])->name('members.update');
+    Route::delete('/members/{id}',       [MessOwnerController::class, 'deleteMember'])->name('members.delete');
 });
 
 // ── Shared Owner: Subscription ──────────────────────────────────

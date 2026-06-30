@@ -23,8 +23,17 @@
 .btn-sm-findr { padding:.32rem .7rem !important; font-size:.78rem !important; }
 .btn-danger-soft { background:#FEE2E2; color:#B91C1C; border:none; border-radius:10px; padding:.34rem .6rem; font-size:.78rem; cursor:pointer; }
 .btn-danger-soft:hover { background:#FECACA; }
-.form-label-sm { font-size:.8rem; font-weight:600; margin-bottom:.25rem; display:block; }
+.form-label-sm { font-size:.8rem; font-weight:600; margin-bottom:.25rem; display:block; color:var(--text-secondary); }
 .item-row input { font-size:.85rem; }
+
+/* Make the Add/Edit Menu modal follow the active light/dark theme (scoped + loads last so it always wins) */
+#menuModal .modal-content { background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-color); }
+#menuModal .modal-header, #menuModal .modal-footer { border-color:var(--border-color); }
+#menuModal .modal-title { color:var(--text-primary); }
+#menuModal .form-check-label { color:var(--text-secondary); }
+#menuModal .form-control, #menuModal .form-select { background:var(--input-bg); border:1.5px solid var(--input-border); color:var(--text-primary); }
+#menuModal .form-control::placeholder { color:var(--text-muted); }
+[data-theme="dark"] #menuModal .btn-close { filter:invert(1) grayscale(100%) brightness(180%); }
 </style>
 @endpush
 
@@ -34,25 +43,7 @@
 @endphp
 <div class="owner-wrapper">
     <!-- Sidebar -->
-    <aside class="owner-sidebar">
-        <div class="pt-3">
-            <div class="sidebar-section-label">My Mess</div>
-            <a href="{{ route('owner.mess.dashboard') }}" class="sidebar-item {{ request()->routeIs('owner.mess.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Overview</a>
-            <a href="{{ route('owner.mess.listings') }}" class="sidebar-item {{ request()->routeIs('owner.mess.listings*') ? 'active' : '' }}"><i class="bi bi-egg-fried"></i> My Messes</a>
-            <a href="{{ route('owner.mess.menus') }}" class="sidebar-item {{ request()->routeIs('owner.mess.menus*') ? 'active' : '' }}"><i class="bi bi-menu-button-wide"></i> Food Menus</a>
-            <a href="{{ route('owner.mess.bookings') }}" class="sidebar-item {{ request()->routeIs('owner.mess.bookings*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-check"></i> Subscribers
-                @if($pendingBookings ?? 0)<span class="sidebar-badge">{{ $pendingBookings }}</span>@endif
-            </a>
-            <a href="{{ route('owner.mess.reviews') }}" class="sidebar-item {{ request()->routeIs('owner.mess.reviews*') ? 'active' : '' }}"><i class="bi bi-star"></i> Reviews</a>
-            <div class="sidebar-section-label">Account</div>
-            <a href="{{ route('owner.subscription') }}" class="sidebar-item {{ request()->routeIs('owner.subscription*') ? 'active' : '' }}">
-                <i class="bi bi-credit-card"></i> Subscription
-                @if(!auth()->user()->hasActiveSubscription())<span class="sidebar-badge" style="background:var(--danger);">!</span>@endif
-            </a>
-            <a href="{{ route('profile') }}" class="sidebar-item"><i class="bi bi-person"></i> Profile</a>
-        </div>
-    </aside>
+    @include('owner.partials.mess-sidebar')
 
     <div class="owner-content">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">

@@ -12,32 +12,7 @@
 @section('content')
 <div class="owner-wrapper">
     <!-- Sidebar -->
-    <aside class="owner-sidebar">
-        <div class="pt-3">
-            <div class="sidebar-section-label">My Hostel</div>
-            <a href="{{ route('owner.hostel.dashboard') }}" class="sidebar-item {{ request()->routeIs('owner.hostel.dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Overview
-            </a>
-            <a href="{{ route('owner.hostel.listings') }}" class="sidebar-item {{ request()->routeIs('owner.hostel.listings*') ? 'active' : '' }}">
-                <i class="bi bi-building"></i> My Hostels
-            </a>
-            <a href="{{ route('owner.hostel.bookings') }}" class="sidebar-item {{ request()->routeIs('owner.hostel.bookings*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-check"></i> Bookings
-                @if($pendingBookings ?? 0)<span class="sidebar-badge">{{ $pendingBookings }}</span>@endif
-            </a>
-            <a href="{{ route('owner.hostel.reviews') }}" class="sidebar-item {{ request()->routeIs('owner.hostel.reviews*') ? 'active' : '' }}">
-                <i class="bi bi-star"></i> Reviews
-            </a>
-            <div class="sidebar-section-label">Account</div>
-            <a href="{{ route('owner.subscription') }}" class="sidebar-item {{ request()->routeIs('owner.subscription*') ? 'active' : '' }}">
-                <i class="bi bi-credit-card"></i> Subscription
-                @if(!auth()->user()->hasActiveSubscription())
-                <span class="sidebar-badge" style="background:var(--danger);">!</span>
-                @endif
-            </a>
-            <a href="{{ route('profile') }}" class="sidebar-item"><i class="bi bi-person"></i> Profile</a>
-        </div>
-    </aside>
+    @include('owner.partials.hostel-sidebar')
 
     <div class="owner-content">
         <!-- Subscription Warning -->

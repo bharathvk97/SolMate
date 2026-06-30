@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Mess;
 use App\Models\MessBooking;
 use App\Models\MessImage;
+use App\Models\MessMember;
 use App\Models\Menu;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MessOwnerController extends Controller
@@ -289,5 +291,145 @@ class MessOwnerController extends Controller
         ]);
 
         return back()->with('success', 'Your reply has been posted.');
+    }
+
+    // ── MEMBERS (Subscription) ─────────────────────────────
+
+    public function membersPage(Request $request)
+    {
+        $messIds = Mess::where('owner_id', auth()->id())->pluck('id');
+        $base    = MessMember::whereIn('mess_id', $messIds);
+
+        $stats = [
+            'total'  => (clone $base)->count(),
+            'paid'   => (clone $base)->where('payment_status', 'paid')->count(),
+            'unpaid' => (clone $base)->where('payment_status', 'unpaid')->count(),
+        ];
+
+        $query = (clone $base)->with('mess');
+
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($w) use ($search) {
+                $w->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('id_proof_number', 'like', "%{$search}%");
+                if (ctype_digit($search)) {
+                    $w->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+        if (in_array($request->payment, ['paid', 'unpaid'], true)) {
+            $query->where('payment_status', $request->payment);
+        }
+
+        if ($request->filled('mess_id') && $messIds->contains((int) $request->mess_id)) {
+            $query->where('mess_id', (int) $request->mess_id);
+        }
+
+        $members = $query->orderByDesc('id')->paginate(12)->withQueryString();
+
+        $messes = Mess::where('owner_id', auth()->id())->orderBy('name')->get();
+
+        $pendingBookings = 0;
+
+        return view('owner.mess.members', compact('members', 'stats', 'messes', 'pendingBookings'));
+    }
+
+    public function storeMember(Request $request)
+    {
+        $data = $this->validateMember($request);
+        $mess = Mess::where('owner_id', auth()->id())->findOrFail($data['mess_id']);
+
+        $payload = $this->memberPayload($data, $mess);
+
+        if ($request->hasFile('photo')) {
+            $disk = config('filesystems.default');
+            $payload['photo_path'] = $request->file('photo')->store('mess-members', $disk);
+            $payload['photo_disk'] = $disk;
+        }
+
+        MessMember::create($payload);
+
+        return redirect()->route('owner.mess.members')
+            ->with('success', "Member '{$data['name']}' added.");
+    }
+
+    public function updateMember(Request $request, int $id)
+    {
+        $member = MessMember::whereHas('mess', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+
+        $data = $this->validateMember($request);
+        $mess = Mess::where('owner_id', auth()->id())->findOrFail($data['mess_id']);
+
+        $payload = $this->memberPayload($data, $mess);
+
+        if ($request->hasFile('photo')) {
+            $disk = config('filesystems.default');
+            if ($member->photo_path) {
+                Storage::disk($member->photo_disk ?: $disk)->delete($member->photo_path);
+            }
+            $payload['photo_path'] = $request->file('photo')->store('mess-members', $disk);
+            $payload['photo_disk'] = $disk;
+        }
+
+        $member->update($payload);
+
+        return redirect()->route('owner.mess.members')
+            ->with('success', "Member '{$member->name}' updated.");
+    }
+
+    public function deleteMember(int $id)
+    {
+        $member = MessMember::whereHas('mess', fn($q) => $q->where('owner_id', auth()->id()))
+            ->findOrFail($id);
+
+        if ($member->photo_path) {
+            Storage::disk($member->photo_disk ?: config('filesystems.default'))->delete($member->photo_path);
+        }
+        $member->delete();
+
+        return back()->with('success', 'Member removed.');
+    }
+
+    private function validateMember(Request $request): array
+    {
+        return $request->validate([
+            'mess_id'         => 'required|integer',
+            'name'            => 'required|string|max:150',
+            'phone'           => 'nullable|string|max:20',
+            'address'         => 'nullable|string|max:500',
+            'age'             => 'nullable|integer|min:1|max:120',
+            'location'        => 'nullable|string|max:150',
+            'gender'          => 'nullable|in:male,female,other',
+            'id_proof_number' => 'nullable|string|max:50',
+            'join_date'       => 'nullable|date',
+            'monthly_fee'     => 'nullable|numeric|min:0',
+            'payment_status'  => 'required|in:paid,unpaid',
+            'notes'           => 'nullable|string|max:1000',
+            'photo'           => 'nullable|image|max:4096',
+        ]);
+    }
+
+    private function memberPayload(array $data, Mess $mess): array
+    {
+        return [
+            'mess_id'         => $mess->id,
+            'name'            => $data['name'],
+            'phone'           => $data['phone'] ?? null,
+            'address'         => $data['address'] ?? null,
+            'age'             => $data['age'] ?? null,
+            'location'        => $data['location'] ?? null,
+            'gender'          => $data['gender'] ?? null,
+            'id_proof_number' => $data['id_proof_number'] ?? null,
+            'join_date'       => $data['join_date'] ?? null,
+            'monthly_fee'     => $data['monthly_fee'] ?? null,
+            'payment_status'  => $data['payment_status'],
+            'notes'           => $data['notes'] ?? null,
+        ];
     }
 }

@@ -19,18 +19,7 @@
 <div style="display:flex;min-height:calc(100vh - 65px);">
 
   <!-- Sidebar -->
-  <aside class="owner-sidebar">
-    <div class="pt-3">
-      <div class="sidebar-section-label">My Hostel</div>
-      <a href="{{ route('owner.hostel.dashboard') }}" class="sidebar-item"><i class="bi bi-speedometer2"></i> Overview</a>
-      <a href="{{ route('owner.hostel.dashboard') }}" class="sidebar-item"><i class="bi bi-building"></i> My Hostels</a>
-      <a href="{{ route('owner.hostel.rooms', $hostel->id) }}" class="sidebar-item active"><i class="bi bi-door-open"></i> Rooms</a>
-      <a href="{{ route('owner.hostel.bookings') }}" class="sidebar-item"><i class="bi bi-calendar-check"></i> Bookings</a>
-      <a href="{{ route('owner.hostel.reviews') }}" class="sidebar-item"><i class="bi bi-star"></i> Reviews</a>
-      <div class="sidebar-section-label">Account</div>
-      <a href="{{ route('owner.subscription') }}" class="sidebar-item"><i class="bi bi-credit-card"></i> Subscription</a>
-    </div>
-  </aside>
+    @include('owner.partials.hostel-sidebar')
 
   <!-- Main -->
   <div style="flex:1;padding:2rem;min-width:0;">
